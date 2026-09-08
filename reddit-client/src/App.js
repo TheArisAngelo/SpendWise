@@ -367,6 +367,34 @@ function HomePage() {
     }
   };
 
+  const handleDeleteTransaction = async (transaction) => {
+    const transactionId = transaction.id || transaction._id;
+    if (!transactionId) {
+      console.error("Cannot delete transaction: missing id", transaction);
+      return;
+    }
+    try {
+      clearBudgetCache();
+      const res = await fetch(`${API}/transactions/${transactionId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      const updated = await res.json();
+      if (updated && Array.isArray(updated.transactions)) {
+        setBudgetData(updated);
+        setCachedBudgetData(updated);
+      }
+    } catch (err) {
+      console.error("Failed to delete transaction", err);
+    }
+  };
+
   const handleAddBudget = async (newBudget) => {
     const safe = {
       ...newBudget,
@@ -666,6 +694,7 @@ function HomePage() {
             <TransactionsTab
               onAddTransaction={handleAddTransaction}
               onEditTransaction={handleEditTransaction}
+              onDeleteTransaction={handleDeleteTransaction}
             />
           )}
           {activeTab === "budgets" && (

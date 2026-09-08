@@ -133,6 +133,37 @@ router.put("/transactions/:id", authMiddleware, async (req, res) => {
   }
 });
 
+router.delete("/transactions/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const budgetData = await BudgetData.findOne({ userId: req.user.userId });
+    if (!budgetData) {
+      return res.status(404).json({ message: "Budget data not found" });
+    }
+
+    const transaction = findTransaction(budgetData, id);
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    // Reverse the transaction's effect on the balance before removing it.
+    if (transaction.type === "income") {
+      budgetData.currentBalance -= transaction.amount;
+    } else {
+      budgetData.currentBalance += transaction.amount;
+    }
+
+    transaction.deleteOne();
+    await budgetData.save();
+
+    cache.del(userCacheKey(req)); // ✅
+    res.json(budgetData);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 router.post("/budgets", authMiddleware, async (req, res) => {
   try {
     const newBudget = req.body;

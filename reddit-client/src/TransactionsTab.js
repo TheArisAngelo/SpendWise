@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useGlobalContext } from "./context/GlobalContext";
 
 // Constants
@@ -47,6 +48,7 @@ function categoriesOf(t) {
 export default function TransactionsTab({
   onAddTransaction,
   onEditTransaction,
+  onDeleteTransaction,
 }) {
   const { budgetData } = useGlobalContext();
   const transactions = budgetData?.transactions || [];
@@ -75,6 +77,9 @@ export default function TransactionsTab({
   const [editFormData, setEditFormData] = useState(null);
   const [editError, setEditError] = useState("");
 
+  // Delete confirmation
+  const [deletingTransaction, setDeletingTransaction] = useState(null);
+
   const openEditModal = (t) => {
     setEditingTransaction(t);
     setEditFormData({
@@ -94,6 +99,17 @@ export default function TransactionsTab({
     setEditFormData(null);
     setEditError("");
   };
+
+  useEffect(() => {
+    if (editingTransaction || deletingTransaction) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [editingTransaction, deletingTransaction]);
 
   const handleEditChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -154,6 +170,14 @@ export default function TransactionsTab({
 
     onEditTransaction?.(updatedTransaction);
     closeEditModal();
+  };
+
+  // Delete confirmation
+  const confirmDelete = () => {
+    if (deletingTransaction) {
+      onDeleteTransaction?.(deletingTransaction);
+    }
+    setDeletingTransaction(null);
   };
 
   const handleChange = (e) => {
@@ -276,338 +300,397 @@ export default function TransactionsTab({
   }, [transactions, search, filterType, filterCategory, filterPeriod]);
 
   return (
-    <>
-      <section className="panel-card">
-        <h2>Recent Transactions</h2>
+    <section className="panel-card">
+      <h2>Recent Transactions</h2>
 
-        {/* ADD FORM */}
-        <form className="transaction-form" onSubmit={handleSubmit}>
-          <div className="transaction-form-grid">
-            <div className="transaction-field">
-              <label htmlFor="title">Transaction Title</label>
-              <input
-                id="title"
-                name="title"
-                type="text"
-                placeholder="e.g. Grocery Shopping"
-                value={formData.title}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="transaction-field">
-              <label htmlFor="amount">Amount Paid</label>
-              <input
-                id="amount"
-                name="amount"
-                type="number"
-                min="1"
-                step="1"
-                placeholder="e.g. 120"
-                value={formData.amount}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="transaction-field">
-              <label htmlFor="date">Date</label>
-              <input
-                id="date"
-                name="date"
-                type="date"
-                value={formData.date}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="transaction-field transaction-field-wide">
-              <label>Category (select one or more)</label>
-              <div className="category-chip-group">
-                {CATEGORIES.map((c) => {
-                  const active = formData.categories.includes(c);
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => toggleCategory(c)}
-                      className={`category-chip${active ? " category-chip-active" : ""}`}
-                      aria-pressed={active}
-                    >
-                      <span>{CATEGORY_ICONS[c]}</span> {c}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="transaction-field">
-              <label htmlFor="type">Type</label>
-              <select
-                id="type"
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-              >
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-              </select>
-            </div>
-
-            <div className="transaction-field">
-              <label htmlFor="tags">Tags (comma-separated)</label>
-              <input
-                id="tags"
-                name="tags"
-                type="text"
-                placeholder="e.g. Vacation, Emergency"
-                value={formData.tags}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <label className="recurring-label">
+      {/* ADD FORM */}
+      <form className="transaction-form" onSubmit={handleSubmit}>
+        <div className="transaction-form-grid">
+          <div className="transaction-field">
+            <label htmlFor="title">Transaction Title</label>
             <input
-              type="checkbox"
-              name="isRecurring"
-              checked={formData.isRecurring}
+              id="title"
+              name="title"
+              type="text"
+              placeholder="e.g. Grocery Shopping"
+              value={formData.title}
               onChange={handleChange}
             />
-            Recurring transaction (salary, subscription, etc.)
-          </label>
+          </div>
 
-          {error && <p className="transaction-form-error">{error}</p>}
-          <button type="submit" className="transaction-submit-btn">
-            Add Transaction
-          </button>
-        </form>
+          <div className="transaction-field">
+            <label htmlFor="amount">Amount Paid</label>
+            <input
+              id="amount"
+              name="amount"
+              type="number"
+              min="1"
+              step="1"
+              placeholder="e.g. 120"
+              value={formData.amount}
+              onChange={handleChange}
+            />
+          </div>
 
-        {/* ── SEARCH + FILTERS ── */}
-        <div className="transaction-filters">
-          <input
-            type="text"
-            className="transaction-search"
-            placeholder="Search by title, category, or tag…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-          >
-            <option value="all">All Types</option>
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-          </select>
-          <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-          >
-            <option value="all">All Categories</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {CATEGORY_ICONS[c]} {c}
-              </option>
-            ))}
-          </select>
+          <div className="transaction-field">
+            <label htmlFor="date">Date</label>
+            <input
+              id="date"
+              name="date"
+              type="date"
+              value={formData.date}
+              onChange={handleChange}
+            />
+          </div>
 
-          <select
-            value={filterPeriod}
-            onChange={(e) => setFilterPeriod(e.target.value)}
-          >
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="year">This Year</option>
-            <option value="all">All Time</option>
-          </select>
+          <div className="transaction-field transaction-field-wide">
+            <label>Category (select one or more)</label>
+            <div className="category-chip-group">
+              {CATEGORIES.map((c) => {
+                const active = formData.categories.includes(c);
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => toggleCategory(c)}
+                    className={`category-chip${active ? " category-chip-active" : ""}`}
+                    aria-pressed={active}
+                  >
+                    <span>{CATEGORY_ICONS[c]}</span> {c}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="transaction-field">
+            <label htmlFor="type">Type</label>
+            <select
+              id="type"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+            >
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+            </select>
+          </div>
+
+          <div className="transaction-field">
+            <label htmlFor="tags">Tags (comma-separated)</label>
+            <input
+              id="tags"
+              name="tags"
+              type="text"
+              placeholder="e.g. Vacation, Emergency"
+              value={formData.tags}
+              onChange={handleChange}
+            />
+          </div>
         </div>
 
-        {/* TRANSACTION LIST */}
-        {filtered.length === 0 ? (
-          <p className="empty-text">No transactions found.</p>
-        ) : (
-          <div className="transactions-list">
-            {filtered.map((t) => {
-              const cats = categoriesOf(t);
-              return (
-                <div key={t.id || t._id} className="transaction-row">
-                  <div className="transaction-row-left">
-                    <span className="transaction-category-icon">
-                      {cats.map((c) => CATEGORY_ICONS[c] || "📦").join(" ")}
-                    </span>
-                    <div>
-                      <h4>
-                        {t.title}
-                        {t.isRecurring && (
-                          <span className="recurring-badge">🔁 Recurring</span>
-                        )}
-                      </h4>
-                      <p>
-                        {cats.join(", ")} • {t.date} • {t.type}
-                        {t.tags?.length > 0 && (
-                          <span className="tag-list">
-                            {t.tags.map((tag) => (
-                              <span key={tag} className="tag-chip">
-                                {tag}
-                              </span>
-                            ))}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="transaction-row-right">
-                    <strong
-                      className={
-                        t.type === "income" ? "amount-income" : "amount-expense"
-                      }
-                    >
-                      {t.type === "income" ? "+" : "-"}
-                      {currency(t.amount)}
-                    </strong>
-                    <button
-                      type="button"
-                      className="transaction-edit-btn"
-                      onClick={() => openEditModal(t)}
-                      aria-label={`Edit ${t.title}`}
-                    >
-                      ✏️ Edit
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-      {/* EDIT MODAL */}
-      {editingTransaction && editFormData && (
-        <div className="modal-overlay" onClick={closeEditModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Edit Transaction</h3>
-              <button
-                type="button"
-                className="modal-close-btn"
-                onClick={closeEditModal}
-                aria-label="Close"
-              >
-                ✕
-              </button>
-            </div>
+        <label className="recurring-label">
+          <input
+            type="checkbox"
+            name="isRecurring"
+            checked={formData.isRecurring}
+            onChange={handleChange}
+          />
+          Recurring transaction (salary, subscription, etc.)
+        </label>
 
-            <form className="transaction-form" onSubmit={handleEditSubmit}>
-              <div className="transaction-form-grid">
-                <div className="transaction-field">
-                  <label htmlFor="edit-title">Transaction Title</label>
-                  <input
-                    id="edit-title"
-                    name="title"
-                    type="text"
-                    value={editFormData.title}
-                    onChange={handleEditChange}
-                  />
-                </div>
+        {error && <p className="transaction-form-error">{error}</p>}
+        <button type="submit" className="transaction-submit-btn">
+          Add Transaction
+        </button>
+      </form>
 
-                <div className="transaction-field">
-                  <label htmlFor="edit-amount">Amount Paid</label>
-                  <input
-                    id="edit-amount"
-                    name="amount"
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={editFormData.amount}
-                    onChange={handleEditChange}
-                  />
-                </div>
+      {/* ── SEARCH + FILTERS ── */}
+      <div className="transaction-filters">
+        <input
+          type="text"
+          className="transaction-search"
+          placeholder="Search by title, category, or tag…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+        >
+          <option value="all">All Types</option>
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+        <select
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+        >
+          <option value="all">All Categories</option>
+          {CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {CATEGORY_ICONS[c]} {c}
+            </option>
+          ))}
+        </select>
 
-                <div className="transaction-field">
-                  <label htmlFor="edit-date">Date</label>
-                  <input
-                    id="edit-date"
-                    name="date"
-                    type="date"
-                    value={editFormData.date}
-                    onChange={handleEditChange}
-                  />
-                </div>
+        <select
+          value={filterPeriod}
+          onChange={(e) => setFilterPeriod(e.target.value)}
+        >
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+          <option value="year">This Year</option>
+          <option value="all">All Time</option>
+        </select>
+      </div>
 
-                <div className="transaction-field transaction-field-wide">
-                  <label>Category (select one or more)</label>
-                  <div className="category-chip-group">
-                    {CATEGORIES.map((c) => {
-                      const active = editFormData.categories.includes(c);
-                      return (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => toggleEditCategory(c)}
-                          className={`category-chip${active ? " category-chip-active" : ""}`}
-                          aria-pressed={active}
-                        >
-                          <span>{CATEGORY_ICONS[c]}</span> {c}
-                        </button>
-                      );
-                    })}
+      {/* TRANSACTION LIST */}
+      {filtered.length === 0 ? (
+        <p className="empty-text">No transactions found.</p>
+      ) : (
+        <div className="transactions-list">
+          {filtered.map((t) => {
+            const cats = categoriesOf(t);
+            return (
+              <div key={t.id || t._id} className="transaction-row">
+                <div className="transaction-row-left">
+                  <span className="transaction-category-icon">
+                    {cats.map((c) => CATEGORY_ICONS[c] || "📦").join(" ")}
+                  </span>
+                  <div>
+                    <h4>
+                      {t.title}
+                      {t.isRecurring && (
+                        <span className="recurring-badge">🔁 Recurring</span>
+                      )}
+                    </h4>
+                    <p>
+                      {cats.join(", ")} • {t.date} • {t.type}
+                      {t.tags?.length > 0 && (
+                        <span className="tag-list">
+                          {t.tags.map((tag) => (
+                            <span key={tag} className="tag-chip">
+                              {tag}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </p>
                   </div>
                 </div>
-
-                <div className="transaction-field">
-                  <label htmlFor="edit-type">Type</label>
-                  <select
-                    id="edit-type"
-                    name="type"
-                    value={editFormData.type}
-                    onChange={handleEditChange}
+                <div className="transaction-row-right">
+                  <strong
+                    className={
+                      t.type === "income" ? "amount-income" : "amount-expense"
+                    }
                   >
-                    <option value="expense">Expense</option>
-                    <option value="income">Income</option>
-                  </select>
-                </div>
-
-                <div className="transaction-field">
-                  <label htmlFor="edit-tags">Tags (comma-separated)</label>
-                  <input
-                    id="edit-tags"
-                    name="tags"
-                    type="text"
-                    value={editFormData.tags}
-                    onChange={handleEditChange}
-                  />
+                    {t.type === "income" ? "+" : "-"}
+                    {currency(t.amount)}
+                  </strong>
+                  <button
+                    type="button"
+                    className="transaction-edit-btn"
+                    onClick={() => openEditModal(t)}
+                    aria-label={`Edit ${t.title}`}
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="transaction-delete-btn"
+                    onClick={() => setDeletingTransaction(t)}
+                    aria-label={`Delete ${t.title}`}
+                  >
+                    🗑️ Delete
+                  </button>
                 </div>
               </div>
+            );
+          })}
+        </div>
+      )}
 
-              <label className="recurring-label">
-                <input
-                  type="checkbox"
-                  name="isRecurring"
-                  checked={editFormData.isRecurring}
-                  onChange={handleEditChange}
-                />
-                Recurring transaction (salary, subscription, etc.)
-              </label>
+      {/* EDIT MODAL */}
+      {editingTransaction &&
+        editFormData &&
+        createPortal(
+          <div className="modal-overlay" onClick={closeEditModal}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Edit Transaction</h3>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={closeEditModal}
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
 
-              {editError && (
-                <p className="transaction-form-error">{editError}</p>
-              )}
+              <form className="transaction-form" onSubmit={handleEditSubmit}>
+                <div className="transaction-form-grid">
+                  <div className="transaction-field">
+                    <label htmlFor="edit-title">Transaction Title</label>
+                    <input
+                      id="edit-title"
+                      name="title"
+                      type="text"
+                      value={editFormData.title}
+                      onChange={handleEditChange}
+                    />
+                  </div>
 
+                  <div className="transaction-field">
+                    <label htmlFor="edit-amount">Amount Paid</label>
+                    <input
+                      id="edit-amount"
+                      name="amount"
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={editFormData.amount}
+                      onChange={handleEditChange}
+                    />
+                  </div>
+
+                  <div className="transaction-field">
+                    <label htmlFor="edit-date">Date</label>
+                    <input
+                      id="edit-date"
+                      name="date"
+                      type="date"
+                      value={editFormData.date}
+                      onChange={handleEditChange}
+                    />
+                  </div>
+
+                  <div className="transaction-field transaction-field-wide">
+                    <label>Category (select one or more)</label>
+                    <div className="category-chip-group">
+                      {CATEGORIES.map((c) => {
+                        const active = editFormData.categories.includes(c);
+                        return (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => toggleEditCategory(c)}
+                            className={`category-chip${active ? " category-chip-active" : ""}`}
+                            aria-pressed={active}
+                          >
+                            <span>{CATEGORY_ICONS[c]}</span> {c}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="transaction-field">
+                    <label htmlFor="edit-type">Type</label>
+                    <select
+                      id="edit-type"
+                      name="type"
+                      value={editFormData.type}
+                      onChange={handleEditChange}
+                    >
+                      <option value="expense">Expense</option>
+                      <option value="income">Income</option>
+                    </select>
+                  </div>
+
+                  <div className="transaction-field">
+                    <label htmlFor="edit-tags">Tags (comma-separated)</label>
+                    <input
+                      id="edit-tags"
+                      name="tags"
+                      type="text"
+                      value={editFormData.tags}
+                      onChange={handleEditChange}
+                    />
+                  </div>
+                </div>
+
+                <label className="recurring-label">
+                  <input
+                    type="checkbox"
+                    name="isRecurring"
+                    checked={editFormData.isRecurring}
+                    onChange={handleEditChange}
+                  />
+                  Recurring transaction (salary, subscription, etc.)
+                </label>
+
+                {editError && (
+                  <p className="transaction-form-error">{editError}</p>
+                )}
+
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="modal-cancel-btn"
+                    onClick={closeEditModal}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="transaction-submit-btn">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {/* DELETE CONFIRM MODAL */}
+      {deletingTransaction &&
+        createPortal(
+          <div
+            className="modal-overlay modal-overlay-confirm"
+            onClick={() => setDeletingTransaction(null)}
+          >
+            <div
+              className="modal-content modal-content-confirm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h3>Delete Transaction?</h3>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={() => setDeletingTransaction(null)}
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="modal-confirm-text">
+                Are you sure you want to delete{" "}
+                <strong>{deletingTransaction.title}</strong> (
+                {deletingTransaction.type === "income" ? "+" : "-"}
+                {currency(deletingTransaction.amount)})? This can't be undone.
+              </p>
               <div className="modal-actions">
                 <button
                   type="button"
                   className="modal-cancel-btn"
-                  onClick={closeEditModal}
+                  onClick={() => setDeletingTransaction(null)}
                 >
                   Cancel
                 </button>
-                <button type="submit" className="transaction-submit-btn">
-                  Save Changes
+                <button
+                  type="button"
+                  className="modal-delete-confirm-btn"
+                  onClick={confirmDelete}
+                >
+                  Delete
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </>
+            </div>
+          </div>,
+          document.body,
+        )}
+    </section>
   );
 }
