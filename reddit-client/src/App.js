@@ -206,7 +206,21 @@ function SideNav() {
     <aside className="side-nav">
       <div className="side-nav-header">
         <h3>
-          <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
+          <Link
+            to="/"
+            style={{
+              textDecoration: "none",
+              color: "inherit",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <img
+              src="/spendwise/SPENDWISE_LOGO.webp"
+              alt="SpendWise Logo"
+              style={{ height: "50px", width: "auto" }}
+            />
             SpendWise
           </Link>
         </h3>
