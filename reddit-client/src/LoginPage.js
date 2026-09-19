@@ -110,13 +110,20 @@ export default function LoginPage({ onLogin }) {
 
       <main className="login-layout">
         <div className="auth-page-header">
-          <p className="eyebrow">LOGIN</p>
-          <h1 className="create-page-title">Access your account</h1>
-          <Link to="/" className="nav-btn auth-home-btn">
-            Home
+          <Link to="/" className="auth-back-link">
+            ← Back to Home
           </Link>
         </div>
+
         <section className="create-card login-card">
+          <div className="auth-card-header">
+            <p className="eyebrow">Login</p>
+            <h1 className="auth-card-title">Access your account</h1>
+            <p className="auth-card-subtitle">
+              Don't have an account? <Link to="/signup">Sign up</Link>
+            </p>
+          </div>
+
           <div className="lane-chip">Sign In</div>
 
           <button
@@ -140,12 +147,15 @@ export default function LoginPage({ onLogin }) {
             )}
           </button>
 
-          <div className="login-divider">
+          <div className="auth-divider">
             <span>or sign in with username or email</span>
           </div>
 
-          <form className="create-form" onSubmit={handleSubmit}>
-            <label className="create-field">
+          <form
+            className="create-form create-form--login"
+            onSubmit={handleSubmit}
+          >
+            <label className="create-field create-field--full">
               <span>Username or Email</span>
               <input
                 type="text"
@@ -156,33 +166,20 @@ export default function LoginPage({ onLogin }) {
               />
             </label>
 
-            <label className="create-field">
+            <label className="create-field create-field--full">
               <span>Password</span>
-              <div style={{ position: "relative" }}>
+              <div className="password-field-wrap">
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
-                  style={{ width: "100%", paddingRight: "40px" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  style={{
-                    position: "absolute",
-                    right: "10px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                    color: "#888",
-                    fontSize: "18px",
-                    lineHeight: 1,
-                  }}
+                  className="password-toggle-btn"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -194,24 +191,24 @@ export default function LoginPage({ onLogin }) {
               </div>
             </label>
 
-            <p style={{ marginTop: "8px", marginBottom: "8px" }}>
-              <Link to="/forgot-password">Forgot Password</Link>
-            </p>
+            <div className="create-field--full login-forgot-row">
+              <Link to="/forgot-password" className="login-forgot-link">
+                Forgot Password?
+              </Link>
+            </div>
 
-            {error ? <div className="lane-error">{error}</div> : null}
+            {error ? (
+              <div className="lane-error create-field--full">{error}</div>
+            ) : null}
 
             <button
               type="submit"
-              className="create-submit-btn"
+              className="create-submit-btn create-field--full"
               disabled={loading}
             >
               {loading ? "Logging In..." : "Log In"}
             </button>
           </form>
-
-          <p style={{ marginTop: "16px" }}>
-            No Account Yet? <Link to="/signup">Create one here</Link>
-          </p>
         </section>
       </main>
     </div>

@@ -57,7 +57,10 @@ export default function ForgotPassword() {
 
     setLoading(true);
     try {
-      await axios.post(`${API_BASE}/api/auth/forgot/verify-otp`, { identifier, otp });
+      await axios.post(`${API_BASE}/api/auth/forgot/verify-otp`, {
+        identifier,
+        otp,
+      });
       setSuccess("OTP verified! Set your new password.");
       setStep(3);
     } catch (err) {
@@ -81,7 +84,10 @@ export default function ForgotPassword() {
 
     setLoading(true);
     try {
-      await axios.post(`${API_BASE}/api/auth/reset-password`, { identifier, newPassword });
+      await axios.post(`${API_BASE}/api/auth/reset-password`, {
+        identifier,
+        newPassword,
+      });
       setSuccess("Password reset successful. Redirecting to login...");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
@@ -93,6 +99,18 @@ export default function ForgotPassword() {
     }
   };
 
+  const stepTitle = {
+    1: "Find your account",
+    2: "Enter your OTP",
+    3: "Create a new password",
+  }[step];
+
+  const stepChip = {
+    1: "Step 1 of 3 — Identify Account",
+    2: "Step 2 of 3 — Verify OTP",
+    3: "Step 3 of 3 — New Password",
+  }[step];
+
   return (
     <div className="app-shell--auth">
       <div className="bg-orb bg-orb-1" />
@@ -101,28 +119,29 @@ export default function ForgotPassword() {
 
       <main className="login-layout">
         <div className="auth-page-header">
-          <p className="eyebrow">Reset Password</p>
-          <h1 className="create-page-title">
-            {step === 1 && "Find your account"}
-            {step === 2 && "Enter your OTP"}
-            {step === 3 && "Create a new password"}
-          </h1>
-          <Link to="/login" className="nav-btn auth-home-btn">
-            Back to Login
+          <Link to="/login" className="auth-back-link">
+            ← Back to Login
           </Link>
         </div>
 
         <section className="create-card login-card">
-          <div className="lane-chip">
-            {step === 1 && "Step 1 of 3 — Identify Account"}
-            {step === 2 && "Step 2 of 3 — Verify OTP"}
-            {step === 3 && "Step 3 of 3 — New Password"}
+          <div className="auth-card-header">
+            <p className="eyebrow">Reset Password</p>
+            <h1 className="auth-card-title">{stepTitle}</h1>
+            <p className="auth-card-subtitle">
+              Remembered it? <Link to="/login">Log in</Link>
+            </p>
           </div>
+
+          <div className="lane-chip">{stepChip}</div>
 
           {/* Step 1 — Identifier */}
           {step === 1 && (
-            <form className="create-form" onSubmit={handleSendOtp}>
-              <label className="create-field">
+            <form
+              className="create-form create-form--login"
+              onSubmit={handleSendOtp}
+            >
+              <label className="create-field create-field--full">
                 <span>Username or Email</span>
                 <input
                   type="text"
@@ -135,12 +154,18 @@ export default function ForgotPassword() {
                 />
               </label>
 
-              {error && <div className="lane-error">{error}</div>}
-              {success && <div className="lane-chip">{success}</div>}
+              {error && (
+                <div className="lane-error create-field--full">{error}</div>
+              )}
+              {success && (
+                <div className="create-success create-field--full">
+                  {success}
+                </div>
+              )}
 
               <button
                 type="submit"
-                className="create-submit-btn"
+                className="create-submit-btn create-field--full"
                 disabled={loading}
               >
                 {loading ? "Sending..." : "Send OTP"}
@@ -150,8 +175,11 @@ export default function ForgotPassword() {
 
           {/* Step 2 — OTP */}
           {step === 2 && (
-            <form className="create-form" onSubmit={handleVerifyOtp}>
-              <label className="create-field">
+            <form
+              className="create-form create-form--login"
+              onSubmit={handleVerifyOtp}
+            >
+              <label className="create-field create-field--full">
                 <span>6-Digit OTP</span>
                 <input
                   type="text"
@@ -165,12 +193,18 @@ export default function ForgotPassword() {
                 />
               </label>
 
-              {error && <div className="lane-error">{error}</div>}
-              {success && <div className="lane-chip">{success}</div>}
+              {error && (
+                <div className="lane-error create-field--full">{error}</div>
+              )}
+              {success && (
+                <div className="create-success create-field--full">
+                  {success}
+                </div>
+              )}
 
               <button
                 type="submit"
-                className="create-submit-btn"
+                className="create-submit-btn create-field--full"
                 disabled={loading}
               >
                 {loading ? "Verifying..." : "Verify OTP"}
@@ -178,8 +212,8 @@ export default function ForgotPassword() {
 
               <button
                 type="button"
-                className="nav-btn auth-home-btn"
-                style={{ marginTop: "8px" }}
+                className="auth-back-link create-field--full"
+                style={{ justifyContent: "center" }}
                 onClick={() => {
                   clearMessages();
                   setStep(1);
@@ -192,10 +226,13 @@ export default function ForgotPassword() {
 
           {/* Step 3 — New Password */}
           {step === 3 && (
-            <form className="create-form" onSubmit={handleResetPassword}>
-              <label className="create-field">
+            <form
+              className="create-form create-form--login"
+              onSubmit={handleResetPassword}
+            >
+              <label className="create-field create-field--full">
                 <span>New Password</span>
-                <div style={{ position: "relative" }}>
+                <div className="password-field-wrap">
                   <input
                     type={showNewPassword ? "text" : "password"}
                     placeholder="Enter new password"
@@ -204,23 +241,11 @@ export default function ForgotPassword() {
                       setNewPassword(e.target.value);
                       clearMessages();
                     }}
-                    style={{ width: "100%", paddingRight: "40px" }}
                   />
                   <button
                     type="button"
+                    className="password-toggle-btn"
                     onClick={() => setShowNewPassword((prev) => !prev)}
-                    style={{
-                      position: "absolute",
-                      right: "10px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                      fontSize: "18px",
-                      lineHeight: 1,
-                    }}
                     aria-label={
                       showNewPassword ? "Hide password" : "Show password"
                     }
@@ -234,9 +259,9 @@ export default function ForgotPassword() {
                 </div>
               </label>
 
-              <label className="create-field">
+              <label className="create-field create-field--full">
                 <span>Confirm New Password</span>
-                <div style={{ position: "relative" }}>
+                <div className="password-field-wrap">
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm new password"
@@ -245,23 +270,11 @@ export default function ForgotPassword() {
                       setConfirmPassword(e.target.value);
                       clearMessages();
                     }}
-                    style={{ width: "100%", paddingRight: "40px" }}
                   />
                   <button
                     type="button"
+                    className="password-toggle-btn"
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    style={{
-                      position: "absolute",
-                      right: "10px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                      fontSize: "18px",
-                      lineHeight: 1,
-                    }}
                     aria-label={
                       showConfirmPassword ? "Hide password" : "Show password"
                     }
@@ -275,12 +288,18 @@ export default function ForgotPassword() {
                 </div>
               </label>
 
-              {error && <div className="lane-error">{error}</div>}
-              {success && <div className="lane-chip">{success}</div>}
+              {error && (
+                <div className="lane-error create-field--full">{error}</div>
+              )}
+              {success && (
+                <div className="create-success create-field--full">
+                  {success}
+                </div>
+              )}
 
               <button
                 type="submit"
-                className="create-submit-btn"
+                className="create-submit-btn create-field--full"
                 disabled={loading}
               >
                 {loading ? "Resetting..." : "Reset Password"}

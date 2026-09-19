@@ -576,44 +576,86 @@ function HomePage() {
       <div className="app-shell budget-app">
         <main className="budget-main">
           <section className="guest-home">
+            {/* ── HERO ── */}
             <div className="guest-hero-card">
-              <p className="guest-badge">Welcome to SpendWise</p>
-              <h1>Track your budget with confidence.</h1>
-              <p className="guest-text">
-                Manage your income, monitor expenses, plan category budgets, and
-                stay focused on savings goals.
-              </p>
-              <div className="guest-actions">
-                <Link to="/login" className="nav-btn">
-                  Log In
-                </Link>
-                <Link to="/signup" className="nav-btn nav-btn-alt">
-                  Sign Up
-                </Link>
+              <div className="guest-hero-inner">
+                <p className="guest-badge">Welcome to SpendWise</p>
+                <h1>
+                  Track your budget with
+                  <span className="guest-hero-accent"> confidence.</span>
+                </h1>
+                <p className="guest-text">
+                  Manage income, monitor expenses, plan category budgets, and
+                  stay focused on the savings goals that actually matter.
+                </p>
+                <div className="guest-actions">
+                  <Link to="/signup" className="nav-btn">
+                    Get Started Free
+                  </Link>
+                  <Link to="/login" className="guest-secondary-btn">
+                    Log In
+                  </Link>
+                </div>
+                <p className="guest-hero-note">
+                  No credit card required · Free forever
+                </p>
               </div>
+              <div className="guest-hero-glow" aria-hidden="true" />
             </div>
+
+            {/* ── FEATURES ── */}
+            <div className="guest-section-header">
+              <p className="guest-section-label">Everything you need</p>
+              <h2 className="guest-section-title">
+                Built for people who want clarity
+              </h2>
+            </div>
+
             <section className="guest-feature-grid">
               <div className="guest-feature-card">
+                <div className="guest-feature-icon icon-teal">
+                  <TrendingUp size={22} />
+                </div>
                 <h3>Track Expenses</h3>
                 <p>
-                  See where your money goes and stay aware of daily spending.
+                  See exactly where your money goes and stay aware of daily
+                  spending patterns.
                 </p>
               </div>
+
               <div className="guest-feature-card">
+                <div className="guest-feature-icon icon-coral">
+                  <Receipt size={22} />
+                </div>
                 <h3>Set Budgets</h3>
                 <p>
-                  Create spending limits for food, shopping, transport, and
-                  more.
+                  Create spending limits for food, shopping, transport, and more
+                  — with live progress.
                 </p>
               </div>
+
               <div className="guest-feature-card">
+                <div className="guest-feature-icon icon-green">
+                  <Banknote size={22} />
+                </div>
                 <h3>Build Savings</h3>
                 <p>
-                  Stay motivated by tracking progress toward your financial
-                  goals.
+                  Stay motivated by tracking progress toward your personal
+                  financial goals.
                 </p>
               </div>
             </section>
+
+            {/* ── FINAL CTA ── */}
+            <div className="guest-cta-strip">
+              <div>
+                <h3>Ready to take control?</h3>
+                <p>Join SpendWise and start tracking in under a minute.</p>
+              </div>
+              <Link to="/signup" className="nav-btn">
+                Create Free Account
+              </Link>
+            </div>
           </section>
         </main>
       </div>

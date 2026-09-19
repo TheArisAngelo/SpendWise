@@ -143,17 +143,20 @@ export default function SignUpPage() {
 
       <main className="login-layout">
         <div className="auth-page-header">
-          <p className="eyebrow">Sign Up</p>
-          <h1 className="create-page-title">Create your account</h1>
-
-          <Link to="/" className="nav-btn auth-home-btn">
-            Home
-          </Link>
-          <Link to="/login" className="nav-btn auth-home-btn">
-            Log In
+          <Link to="/" className="auth-back-link">
+            ← Back to Home
           </Link>
         </div>
+
         <section className="create-card login-card">
+          <div className="auth-card-header">
+            <p className="eyebrow">Sign Up</p>
+            <h1 className="auth-card-title">Create your account</h1>
+            <p className="auth-card-subtitle">
+              Already have an account? <Link to="/login">Log in</Link>
+            </p>
+          </div>
+
           <div className="lane-chip">Create Account</div>
 
           <button
@@ -177,8 +180,13 @@ export default function SignUpPage() {
             )}
           </button>
 
+          <div className="auth-divider">
+            <span>or continue with email</span>
+          </div>
+
           <form className="create-form" onSubmit={handleSubmit}>
-            <label className="create-field">
+            {/* Row 1 — Username (full width) */}
+            <label className="create-field create-field--full">
               <span>Username</span>
               <input
                 type="text"
@@ -189,7 +197,8 @@ export default function SignUpPage() {
               />
             </label>
 
-            <label className="create-field">
+            {/* Row 2 — Email (full width) */}
+            <label className="create-field create-field--full">
               <span>Email</span>
               <input
                 type="email"
@@ -200,17 +209,7 @@ export default function SignUpPage() {
               />
             </label>
 
-            <label className="create-field">
-              <span>Mobile Number (Optional)</span>
-              <input
-                type="text"
-                name="mobileNumber"
-                placeholder="Enter your mobile number"
-                value={formData.mobileNumber}
-                onChange={handleChange}
-              />
-            </label>
-
+            {/* Row 3 — Country + City side by side */}
             <label className="create-field">
               <span>Country</span>
               <input
@@ -233,6 +232,19 @@ export default function SignUpPage() {
               />
             </label>
 
+            {/* Row 4 — Mobile (full width) */}
+            <label className="create-field create-field--full">
+              <span>Mobile Number (Optional)</span>
+              <input
+                type="text"
+                name="mobileNumber"
+                placeholder="Enter your mobile number"
+                value={formData.mobileNumber}
+                onChange={handleChange}
+              />
+            </label>
+
+            {/* Row 5 — Password + Confirm Password side by side */}
             <label className="create-field">
               <span>Password</span>
               <input
@@ -255,20 +267,18 @@ export default function SignUpPage() {
               />
             </label>
 
-            {error ? <div className="lane-error">{error}</div> : null}
+            {error ? (
+              <div className="lane-error create-field--full">{error}</div>
+            ) : null}
 
             <button
               type="submit"
-              className="create-submit-btn"
+              className="create-submit-btn create-field--full"
               disabled={loading}
             >
               {loading ? "Signing Up..." : "Sign Up"}
             </button>
           </form>
-
-          <p style={{ marginTop: "16px" }}>
-            Already have an account? <Link to="/login">Login</Link>
-          </p>
         </section>
       </main>
     </div>
